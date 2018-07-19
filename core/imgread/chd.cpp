@@ -98,11 +98,13 @@ bool CHDDisc::TryOpen(const wchar* file)
 
 	for(;;)
 	{
-		char type[64],subtype[32]="NONE",pgtype[32],pgsub[32];
-		int tkid,frames,pregap=0,postgap=0;
+		int tkid=-1,frames=0,pregap=0,postgap=0, padframes=0;
+		char type[16], subtype[16], pgtype[16], pgsub[16];
+		
+
 		err=chd_get_metadata(chd,CDROM_TRACK_METADATA2_TAG,tracks.size(),temp,sizeof(temp),&temp_len,&tag,&flags);
 		if (err==CHDERR_NONE)
-		{
+		{			
 			//"TRACK:%d TYPE:%s SUBTYPE:%s FRAMES:%d PREGAP:%d PGTYPE:%s PGSUB:%s POSTGAP:%d"
 			sscanf(temp,CDROM_TRACK_METADATA2_FORMAT,&tkid,type,subtype,&frames,&pregap,pgtype,pgsub,&postgap);
 		}
@@ -111,10 +113,26 @@ bool CHDDisc::TryOpen(const wchar* file)
 			//CDROM_TRACK_METADATA_FORMAT	"TRACK:%d TYPE:%s SUBTYPE:%s FRAMES:%d"
 			sscanf(temp,CDROM_TRACK_METADATA_FORMAT,&tkid,type,subtype,&frames);
 		}
-		else
+		else 
 		{
-			printf("chd: Unable to find metadata, %d\n",err);
-			break;
+			printf("GDROM_OLD_METADATA_TAG");
+			err=chd_get_metadata(chd,GDROM_OLD_METADATA_TAG,tracks.size(),temp,sizeof(temp),&temp_len,&tag,&flags);
+			if (err != CHDERR_NONE)
+			{
+				printf("GDROM_TRACK_METADATA_TAG");
+				err = chd_get_metadata(chd,GDROM_TRACK_METADATA_TAG,tracks.size(),temp,sizeof(temp),&temp_len,&tag,&flags);
+			}
+
+			if (err == CHDERR_NONE)
+			{
+				//GDROM_TRACK_METADATA_FORMAT	"TRACK:%d TYPE:%s SUBTYPE:%s FRAMES:%d PAD:%d PREGAP:%d PGTYPE:%s PGSUB:%s POSTGAP:%d"
+				sscanf(temp, GDROM_TRACK_METADATA_FORMAT, &tkid, type, subtype, &frames, &padframes, &pregap, pgtype, pgsub, &postgap);				
+			}
+			else
+			{
+				printf("chd: Unable to find metadata, %d\n",err);
+				break;
+			}
 		}
 
 		if (tkid!=(tracks.size()+1) || (strcmp(type,"MODE1_RAW")!=0 && strcmp(type,"AUDIO")!=0 && strcmp(type,"MODE1")!=0) || strcmp(subtype,"NONE")!=0 || pregap!=0 || postgap!=0)

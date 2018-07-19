@@ -222,7 +222,7 @@
 #define CHD_MDFLAGS_CHECKSUM		0x01		/* indicates data is checksummed */
 
 /* standard hard disk metadata */
-#define HARD_DISK_METADATA_TAG		0x47444444	/* 'GDDD' */
+#define HARD_DISK_METADATA_TAG		CHD_MAKE_TAG('G','D','D','D')
 #define HARD_DISK_METADATA_FORMAT	"CYLS:%d,HEADS:%d,SECS:%d,BPS:%d"
 
 /* hard disk identify information */
@@ -235,12 +235,13 @@
 #define PCMCIA_CIS_METADATA_TAG		0x43495320  /* 'CIS '  */
 
 /* standard CD-ROM metadata */
-#define CDROM_OLD_METADATA_TAG		0x43484344	/* 'CHCD' */
-#define CDROM_TRACK_METADATA_TAG	0x43485452	/* 'CHTR' */
+#define CDROM_OLD_METADATA_TAG		CHD_MAKE_TAG('C','H','C','D')
+#define CDROM_TRACK_METADATA_TAG	CHD_MAKE_TAG('C','H','T','R')
 #define CDROM_TRACK_METADATA_FORMAT	"TRACK:%d TYPE:%s SUBTYPE:%s FRAMES:%d"
-#define CDROM_TRACK_METADATA2_TAG 0x43485432	/* 'CHT2' */
+#define CDROM_TRACK_METADATA2_TAG	CHD_MAKE_TAG('C','H','T','2')
 #define CDROM_TRACK_METADATA2_FORMAT	"TRACK:%d TYPE:%s SUBTYPE:%s FRAMES:%d PREGAP:%d PGTYPE:%s PGSUB:%s POSTGAP:%d"
-#define GDROM_TRACK_METADATA_TAG	0x43484744	/* 'CHTD' */
+#define GDROM_OLD_METADATA_TAG		CHD_MAKE_TAG('C','H','G','T')
+#define GDROM_TRACK_METADATA_TAG	CHD_MAKE_TAG('C', 'H', 'G', 'D')
 #define GDROM_TRACK_METADATA_FORMAT	"TRACK:%d TYPE:%s SUBTYPE:%s FRAMES:%d PAD:%d PREGAP:%d PGTYPE:%s PGSUB:%s POSTGAP:%d"
 
 /* standard A/V metadata */
