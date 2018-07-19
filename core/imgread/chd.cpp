@@ -115,11 +115,11 @@ bool CHDDisc::TryOpen(const wchar* file)
 		}
 		else 
 		{
-			printf("GDROM_OLD_METADATA_TAG");
+//			printf("GDROM_OLD_METADATA_TAG");
 			err=chd_get_metadata(chd,GDROM_OLD_METADATA_TAG,tracks.size(),temp,sizeof(temp),&temp_len,&tag,&flags);
 			if (err != CHDERR_NONE)
 			{
-				printf("GDROM_TRACK_METADATA_TAG");
+//				printf("GDROM_TRACK_METADATA_TAG");
 				err = chd_get_metadata(chd,GDROM_TRACK_METADATA_TAG,tracks.size(),temp,sizeof(temp),&temp_len,&tag,&flags);
 			}
 
