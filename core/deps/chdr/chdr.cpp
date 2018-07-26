@@ -662,18 +662,28 @@ uint16_t crc16(const void *data, uint32_t length)
 }
 
 /*-------------------------------------------------
+	compressed - test if CHD file is compressed
++-------------------------------------------------*/
+
+static inline int compressed(chd_header* header) {
+	return header->compression[0] != CHD_CODEC_NONE;
+}
+
+/*-------------------------------------------------
 	decompress_v5_map - decompress the v5 map
 -------------------------------------------------*/
 
 static chd_error decompress_v5_map(chd_file* chd, chd_header* header)
 {
 //	printf("decompress_v5_map()\n");
-	if (header->mapoffset == 0)
+	int rawmapsize = map_size_v5(header);
+	
+	if (!compressed(header))
 	{
-#if 0
-		memset(header->rawmap, 0xff,map_size_v5(header));
-#endif
-		return CHDERR_READ_ERROR;
+			header->rawmap = (uint8_t*)malloc(rawmapsize);
+			core_fseek(chd->file, header->mapoffset, SEEK_SET);
+			core_fread(chd->file, header->rawmap, rawmapsize);
+			return CHDERR_NONE;
 	}
 
 	/* read the reader */
@@ -694,7 +704,7 @@ static chd_error decompress_v5_map(chd_file* chd, chd_header* header)
 	core_fseek(chd->file, header->mapoffset + 16, SEEK_SET);
 	core_fread(chd->file, compressed, mapbytes);
 	struct bitstream* bitbuf = create_bitstream(compressed, sizeof(uint8_t) * mapbytes);
-	header->rawmap = (uint8_t*)malloc(sizeof(uint8_t) * map_size_v5(header));
+	header->rawmap = (uint8_t*)malloc(/*sizeof(uint8_t) **/ map_size_v5(header));
 //	printf("compressed.size: %d\n", sizeof(uint8_t) * mapbytes);
 
 	/* first decode the compression types */
@@ -971,14 +981,13 @@ chd_error chd_open_file(core_file *file, int mode, chd_file *parent, chd_file **
 		
 	/* now read the hunk map */
 //	printf("now read the hunk map\n");	
-	if ((newchd->header.version >= 5) && (newchd->header.compression[0] != CHD_CODEC_NONE))
+	if (newchd->header.version >= 5)
 	{
-//		printf("compressed\n");
+		printf("V5\n");
 		err = decompress_v5_map(newchd, &(newchd->header));
 	}
 	else
 	{
-//		printf("uncompressed\n");
 		err = map_read(newchd);
 	}
 
@@ -1562,7 +1571,7 @@ static chd_error header_read(chd_file *chd, chd_header *header)
 		memcpy(header->rawsha1, &rawheader[64], CHD_SHA1_BYTES);
 
 		/* determine properties of map entries */
-		header->mapentrybytes = (header->compression[0] != CHD_CODEC_NONE) ? 12 : 4;
+		header->mapentrybytes = compressed(header) ? 12 : 4;
 
 		/* hack */
 		header->totalhunks 		= header->hunkcount;
@@ -1706,7 +1715,7 @@ static chd_error hunk_read_into_memory(chd_file *chd, UINT32 hunknum, UINT8 *des
 		uint8_t *rawmap = &chd->header.rawmap[chd->header.mapentrybytes * hunknum];
 
 		/* TODO uncompressed case */
-		if (chd->header.compression[0] == CHD_CODEC_NONE)
+		if (!compressed(&chd->header))
 		{
 //			printf("uncompressed case\n");
 			blockoffs = uint64_t(get_bigendian_uint32(&rawmap[0])) * uint64_t(chd->header.hunkbytes);
