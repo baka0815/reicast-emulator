@@ -1718,7 +1718,8 @@ static chd_error hunk_read_into_memory(chd_file *chd, UINT32 hunknum, UINT8 *des
 		if (!compressed(&chd->header))
 		{
 //			printf("uncompressed case\n");
-			blockoffs = uint64_t(get_bigendian_uint32(&rawmap[0])) * uint64_t(chd->header.hunkbytes);
+			err = CHDERR_NONE;
+			blockoffs = uint64_t(get_bigendian_uint32(&rawmap[0])) * uint64_t(chd->header.hunkbytes);			
 			if (blockoffs != 0)
 			{
 				core_fseek(chd->file, blockoffs, SEEK_SET);
@@ -1727,11 +1728,11 @@ static chd_error hunk_read_into_memory(chd_file *chd, UINT32 hunknum, UINT8 *des
 			else if (chd->parent == NULL)
 				throw CHDERR_REQUIRES_PARENT;
 			else if (chd->parent != NULL)
-				hunk_read_into_memory(chd->parent, hunknum, dest);
+				err = hunk_read_into_memory(chd->parent, hunknum, dest);
 			else
 				memset(dest, 0, chd->header.hunkbytes);
 			
-			return CHDERR_NONE;
+			return err;
 		}
 
 //		printf("compressed case\n");
